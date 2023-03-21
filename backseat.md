@@ -8,9 +8,10 @@ Readability issues to consider:
 - Long or complex expressions: using too many nested parentheses, long variable names, or multiple function calls in one line can make the code difficult to read and debug.
 - Inconsistent naming and code style.
 - Code repetition
-The user submits a small section of code from a larger file, if you find any readability issues in the code, list them with the corresponding line number in the format. Do not try and correct logical errors or whitespace, and ignore that some variables are likely undeclared as this is just a small section of code from a larger file. Do not be overly pedantic, it is ok to suggest no improvements.
+The user submits a small section of code from a larger file, if you find any readability issues in the code, list them with the corresponding line number in the format. Do not try and correct logical errors or whitespace, and ignore that some variables are likely undeclared as this is just a small section of code from a larger file. Treat each code snippet separately, and do not be overly pedantic. It is ok to suggest no improvements.
+Response format: 
 Readability rating out of 5
-Line #: <issue (must be negative)>
+Line #: <issue (must be negative)> 
 
 ### Input:
 04 public class Logic {
@@ -31,7 +32,7 @@ Line #: <issue (must be negative)>
 19     }
 20 }
 ### Response:
-Readability rating: 1/5 - Awful (Issue report max length of 7) 7 issues found:
+This code snippet has awful readability: 1/5 rating (Issue report max length of 7) 7 issues found:
 Line 4: The class name Logic is too generic
 Line 6: The variable name sc is unclear. A more meaningful name could be scanner.
 Line 7: The variable name n is unclear. A more meaningful name could be arraySize or numElements.
@@ -64,7 +65,7 @@ Lines 13-14 and 18: There are no comments explaining the meaning of the dp array
 284                self.pwms[len(self.pwms)-1].freq(tones[self.playingNotes[self.arpnote+(len(self.pwms)-1)]])
 285                self.arpnote = self.arpnote + 1
 ### Response:
-Readability rating: 4/5 - Good (Issue report max length of 3) 3 issues found:
+This code snippet has good readability: 4/5 rating (Issue report max length of 3) 3 issues found:
 Line 274: It is unclear what an "arp" is
 Line 276: The variable name p is unclear. A better name would be currentPWM
 Line 284: Too complicated for one line, separate the nested logic across multiple lines.
@@ -81,7 +82,7 @@ Line 284: Too complicated for one line, separate the nested logic across multipl
 321 
 322     #define SPI_TOUCH_FREQUENCY CONFIG_SPI_TOUCH_FREQUENCY
 ### Response:
-Readability rating: 5/5 - No Issues
+This code snippet has perfect readability: 5/5 rating
 
 ### Input:
 172         return cTile;
@@ -107,7 +108,7 @@ Readability rating: 5/5 - No Issues
 192         {
 193             var GM = GridManager.instance;
 ### Response:
-Readability rating: 5/5 - No Issues
+This code snippet has perfect readability: 5/5 rating
 
 ### Input:
 348     char long_filename[20][13]; //Array of substrings that make up the long filename in reverse
@@ -157,7 +158,117 @@ Lines 364-366: The for loop logic is complex, add a comment to explain what it d
 300         let piece_with_pos = self.piece.as_mut().unwrap();
 301         let piece_ref = piece_with_pos.tetris_piece_mut();
 ### Response:
-Readability rating: 4/5 - Good (Issue report max length of 3) 3 issues found:
+This code snippet has good readability: 4/5 rating (Issue report max length of 3) 3 issues found:
 Line 286-289: The match statement is not commented, making it hard to understand at first glance.
 Line 290: There are no comments explaining the logic taking place
 Line 299: The function name rot_pressed is unclear. A more descriptive name would be handle_rotation_input.
+
+### Input:
+1         # 1. Create ICMP socket
+2         #                            IPv4 address format
+3         ICMPsocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_RAW, proto=socket.getprotobyname('icmp'))
+4         ICMPsocket.settimeout(self.timeout)
+5         #socket.SOL_IP
+6         #                    Network Layer
+7         ICMPsocket.setsockopt(socket.IPPROTO_IP, socket.IP_TTL, struct.pack('B', ttl))
+8         #ICMPsocket.connect((destinationAddress, 0)) #Don't do this (or you won't be able to recieve from any other IPs)
+9 
+10         # Problem, the address/hostname is the one of the most recently done ping, 
+11         # if some of the 3 pings go to different addresses you'd never know in the results
+12         stats = {
+13             "destinationHostname" : None,
+14             "destinationAddress" : None,
+15             "measurements" : [None, None, None],
+16             "type" : None
+17         }
+18         
+19         for i in range(3):
+20             startTime = self.sendOnePing(icmpSocket=ICMPsocket, destinationAddress=destinationAddress, ID=id, sequenceNumber=sequenceNumber, ttl=ttl)
+21             statsSingle = self.receiveOnePing(icmpSocket=ICMPsocket, ID=id, sequenceNumber=sequenceNumber, sendTime=startTime)
+22             #Each measurement could be a different IP, maybe we do all 3 measurements on the first IP that resolves using ordinary ping?
+### Response:
+This code snippet has good readability: 4/5 rating (Issue report max length of 3) 2 issues found:
+Line 5: The commented out code is unnecessary and should be removed.
+Line 8: The commented out code is unnecessary and should be removed.
+
+### Input:
+1         Node node = solarObject.getNode();
+2 
+3         //Create new sphere if it doesn't exist
+4         if (node == null) {
+5             javafx.scene.shape.Sphere newSphere = new javafx.scene.shape.Sphere(diameter / 2);
+6 
+7             newSphere.setCullFace(CullFace.BACK); //Improve performance
+8             solarObjects.getChildren().add(newSphere);
+9             
+10             //Create new colored phong material
+11             PhongMaterial material = new PhongMaterial();
+12             float[] colComponenets = getColourFromString(col);
+13             material.setDiffuseColor(new Color(colComponenets[0], colComponenets[1], colComponenets[2], 1.0));
+14             //Apply texture to sphere
+15             if (solarObject.getTexture() != null) {
+16                 try {
+17                     material.setDiffuseMap(new Image(new File("../res/" + solarObject.getTexture()).toURI().toURL().toExternalForm()));
+18                 } catch (MalformedURLException e) {
+19                     e.printStackTrace();
+20                 }
+21             }
+### Response:
+This code snippet has perfect readability: 5/5 rating
+
+### Input:
+1 func init() {
+2 	t["HostCapabilityUnmapMethodSupported"] = reflect.TypeOf((*HostCapabilityUnmapMethodSupported)(nil)).Elem()
+3 }
+4 
+5 type HostCapabilityVmDirectPathGen2UnsupportedReason string
+6 
+7 const (
+8 	HostCapabilityVmDirectPathGen2UnsupportedReasonHostNptIncompatibleProduct  = HostCapabilityVmDirectPathGen2UnsupportedReason("hostNptIncompatibleProduct")
+9 	HostCapabilityVmDirectPathGen2UnsupportedReasonHostNptIncompatibleHardware = HostCapabilityVmDirectPathGen2UnsupportedReason("hostNptIncompatibleHardware")
+10 	HostCapabilityVmDirectPathGen2UnsupportedReasonHostNptDisabled             = HostCapabilityVmDirectPathGen2UnsupportedReason("hostNptDisabled")
+11 )
+12 
+13 func init() {
+14 	t["HostCapabilityVmDirectPathGen2UnsupportedReason"] = reflect.TypeOf((*HostCapabilityVmDirectPathGen2UnsupportedReason)(nil)).Elem()
+15 }
+16 
+17 type HostCertificateManagerCertificateInfoCertificateStatus string
+### Response:
+This code snippet has bad readability: 2/5 rating (Issue report max length of 6) 6 issues found:
+Line 2: The variable name t is unclear. A more descriptive name would be typeMap.
+Line 5: The variable name HostCapabilityVmDirectPathGen2UnsupportedReason is too long and should be shortened to something like UnsupportedReason.
+Line 8: The variable name HostCapabilityVmDirectPathGen2UnsupportedReasonHostNptIncompatibleProduct is too long and should be shortened to something like IncompatibleProduct.
+Line 9: The variable name HostCapabilityVmDirectPathGen2UnsupportedReasonHostNptIncompatibleHardware is too long and should be shortened to something like IncompatibleHardware
+Line 10: The variable name HostCapabilityVmDirectPathGen2UnsupportedReasonHostNptDisabled is too long ans should be shortened to something like NptDisabled
+Line 17: The variable name HostCertificateManagerCertificateInfoCertificateStatus is too long and should be shortened to something like CertificateStatus.
+
+### Input:
+1    for (let i: number = 0; i < l; i++) {
+2       let notAddr: boolean = false;
+3       // non standard input
+4       if (items[i].scriptSig && !items[i].addr) {
+5         items[i].addr = 'Unparsed address [' + u++ + ']';
+6         items[i].notAddr = true;
+7         notAddr = true;
+8       }
+9 
+10       // non standard output
+11       if (items[i].scriptPubKey && !items[i].scriptPubKey.addresses) {
+12         items[i].scriptPubKey.addresses = ['Unparsed address [' + u++ + ']'];
+13         items[i].notAddr = true;
+14         notAddr = true;
+15       }
+16 
+17       // multiple addr at output
+18       if (items[i].scriptPubKey && items[i].scriptPubKey.addresses.length > 1) {
+19         items[i].addr = items[i].scriptPubKey.addresses.join(',');
+20         ret.push(items[i]);
+21         continue;
+22       }
+### Response:
+This code snippet has average readability: 3/5 rating (Issue report max length of 5) 4 issues found:
+Line 1: The variable name l is easily confused with the characters I or 1
+Line 2: The variable name notAddr is unclear and confusing since "not" makes it a double negative. A better name would be hasUnparsedAddress.
+Line 4: The variable name items is too generic and should be more descriptive.
+Line 12: The variable name u is unclear. A more descriptive name would be unparsedAddressIndex.
