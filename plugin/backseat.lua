@@ -7,21 +7,14 @@ vim.g.loaded_backseat = true
 require("backseat").setup()
 local fewshot = require("backseat.fewshot")
 
+-- Create a namespace
+local backseat_ns = vim.api.nvim_create_namespace("backseat")
+
 local model = "gpt-4" -- gpt-3.5-turbo
 
 local function print(msg)
     _G.print("Backseat > " .. msg)
 end
-
--- local function decToByteStr(dec, bits)
---     local byteStr = ""
---     for i = bits, 1, -1 do
---         local bit = math.floor(dec / 2 ^ (i - 1))
---         byteStr = byteStr .. bit
---         dec = dec - bit * 2 ^ (i - 1)
---     end
---     return byteStr
--- end
 
 local function getAPIKey()
     local api_key = vim.g.openai_api_key
@@ -71,7 +64,34 @@ local function gpt_request(dataJSON)
 end
 
 local function parseResponse(response)
-    print("AI Says: " .. response.choices[1].message.content)
+    -- split response.choices[1].message.content into lines
+    local lines = vim.split(response.choices[1].message.content, "\n")
+    for _, line in ipairs(lines) do
+        -- If line starts with line=
+        if string.sub(line, 1, 5) == "line=" then
+            -- Get the line number
+            local lineNum = tonumber(string.sub(line, 6, string.find(line, ":") - 1))
+            if lineNum == nil then
+                print("Bad line number: " .. line)
+                goto continue
+            end
+            -- Get the message
+            local message = string.sub(line, string.find(line, ":") + 1, string.len(line))
+            -- Print the message
+            print("Line " .. lineNum .. ": " .. message)
+            -- Get the buffer number
+            local bufnr = vim.api.nvim_get_current_buf()
+            -- Add a lightbulb icon to the end of the line
+            -- vim.api.nvim_buf_set_extmark(bufnr, backseat_ns, lineNum - 1, 0, { virt_text = { { "", "Comment" } } })
+            -- Add a lightbulb icon to the line number column
+            vim.api.nvim_buf_set_extmark(bufnr, backseat_ns, lineNum - 1, 0, {
+                virt_text = { { "", "Backseat" } },
+                virt_text_pos = "overlay",
+                hl_mode = "combine",
+            })
+            ::continue::
+        end
+    end
 end
 
 -- Set up the API key
@@ -104,6 +124,15 @@ vim.api.nvim_create_user_command("Backseat", function()
 
     local bufnr = vim.api.nvim_get_current_buf()
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    local startingLineNumber = 1
+
+    -- Get number of digits for the highest line number
+    local numDigits = string.len(tostring(#lines + startingLineNumber))
+    -- Prepend each line with its line number zero padded to numDigits
+    for i, line in ipairs(lines) do
+        lines[i] = string.format("%0" .. numDigits .. "d", i) .. " " .. line
+    end
+
     local text = table.concat(lines, "\n")
 
     local requestTable = {
