@@ -13,6 +13,16 @@ local function print(msg)
     _G.print("Backseat > " .. msg)
 end
 
+-- local function decToByteStr(dec, bits)
+--     local byteStr = ""
+--     for i = bits, 1, -1 do
+--         local bit = math.floor(dec / 2 ^ (i - 1))
+--         byteStr = byteStr .. bit
+--         dec = dec - bit * 2 ^ (i - 1)
+--     end
+--     return byteStr
+-- end
+
 local function getAPIKey()
     local api_key = vim.g.openai_api_key
     if api_key == nil then
@@ -27,9 +37,19 @@ local function gpt_request(dataJSON)
     if api_key == nil then
         return nil
     end
+
+    -- Convert dataJSON to a hex string using string.byte so that it can be passed without escaping issues
+    local dataHex = ""
+    for i = 1, #dataJSON do
+        local hex = string.format("%02x", string.byte(dataJSON, i))
+        dataHex = dataHex .. "\\x" .. hex
+    end
+
     local curlRequest = string.format(
-        "curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
-        api_key .. "\" -d '" .. dataJSON .. "'"
+        "echo -en '" ..
+        dataHex ..
+        "' | curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
+        api_key .. "\" --data-binary @-"
     )
     -- print(curlRequest)
 
@@ -98,6 +118,10 @@ vim.api.nvim_create_user_command("Backseat", function()
     })
 
     local requestJSON = vim.json.encode(requestTable)
+
+    -- Get bufname without the path
+    local bufname = vim.fn.fnamemodify(vim.fn.bufname(bufnr), ":t")
+    print("Sending " .. bufname .. " and waiting for response...")
 
     local responseTable = gpt_request(requestJSON)
     if responseTable == nil then
