@@ -6,7 +6,7 @@
 | User Command | Purpose |
 | -- | -- |
 | `:Backseat`  | Sends the current buffer to OpenAI to highlight readability feedback |
-| `:BackseatAsk <question>` | Ask a question about the code in the current buffer (i.e What does the function on line 20 do?)
+| `:BackseatAsk <question>` | Ask a question about the code in the current buffer (i.e What does the function on line 20 do?, Summarize this code)
 | `:BackseatClear` | Clear all Backseat highlighting from the current buffer
 | `:BackseatClearLine` | Clear the current line of Backseat highlighting
 
@@ -21,7 +21,7 @@ Requires curl to be installed. If a buffer contains more than 100 lines, it will
                 openai_api_key = 'sk-xxxxxxxxxxxxxx', -- Get yours from platform.openai.com/account/api-keys
                 openai_model_id = 'gpt-3.5-turbo', --gpt-4
                 
-                -- additional_instruction = "Make fun of the code" -- (GPT-3 will probably deny this request)
+                -- additional_instruction = "Make fun of the code", -- (GPT-3 will probably deny this request, but GPT-4 complies)
                 -- highlight = {
                 --     icon = '', -- ''
                 --     group = 'Comment',
