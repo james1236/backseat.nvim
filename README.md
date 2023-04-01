@@ -23,6 +23,7 @@ If a buffer contains more than 100 lines, it will be split into multiple <= 100 
             require("backseat").setup({
                 openai_api_key = 'sk-xxxxxxxxxxxxxx', -- Get yours from platform.openai.com/account/api-keys
                 openai_model_id = 'gpt-3.5-turbo', --gpt-4
+                split_threshold = 100,
                 
                 -- additional_instruction = "Respond snarkily", -- (GPT-3 will probably deny this request, but GPT-4 complies)
                 -- highlight = {
@@ -41,6 +42,7 @@ If a buffer contains more than 100 lines, it will be split into multiple <= 100 
 | --- | --- | --- | -- |
 `vim.g.backseat_openai_api_key` | `openai_api_key` | `nil` | Your OpenAI API key, needed to access language models
 `vim.g.backseat_openai_model_id` | `openai_model_id` | `'gpt-3.5-turbo'` | The model's identifier, such as gpt-3.5-turbo and gpt-4
+`vim.g.backseat_split_threshold` | `split_threshold` | `100` | The number of lines per request (lower uses more tokens but increases number of suggestions)
 `vim.g.backseat_additional_instruction` | `additional_instruction`, | `nil` | An additional instruction to give the AI, like "Make your responses more brief"
 `vim.g.backseat_highlight_icon` | `highlight.icon` | `''` | The sign column icon to display for each line containing suggestions
 `vim.g.backseat_highlight_group` | `highlight.group` | `'String'` | The `:hi` highlight color group for the icon and the suggestion text 
