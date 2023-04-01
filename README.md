@@ -18,7 +18,7 @@ If a buffer contains more than 100 lines, it will be split into multiple <= 100 
 ### Lazy plugin manager
 ```lua
     {
-        name = "james1236/backseat.nvim",
+        "james1236/backseat.nvim",
         config = function()
             require("backseat").setup({
                 openai_api_key = 'sk-xxxxxxxxxxxxxx', -- Get yours from platform.openai.com/account/api-keys
