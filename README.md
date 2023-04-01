@@ -30,6 +30,9 @@ Requires curl to be installed. If a buffer contains more than 100 lines, it will
         end
     },
 ```
+### The result of using `additional_instruction = "Respond snarkily"`
+![image](https://user-images.githubusercontent.com/32351696/229297495-6d145848-10bf-43eb-8c2a-ab4264f514b1.png)
+
 # Config 
 | Global Name | Setup Table Name | Default | Purpose |
 | --- | --- | --- | -- |
