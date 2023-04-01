@@ -1,6 +1,6 @@
 # backseat.nvim
 ### A neovim plugin that uses GPT to highlight and explain code readability issues
-![image](https://user-images.githubusercontent.com/32351696/229299250-1fcb4135-2a6a-4663-9637-13af7c0ee7cd.png)
+![image](https://user-images.githubusercontent.com/32351696/229314187-f229664f-f396-4840-9765-8118810b3dae.png)
 
 # Commands
 | User Command | Purpose |
@@ -10,7 +10,10 @@
 | `:BackseatClear` | Clear all Backseat highlighting from the current buffer
 | `:BackseatClearLine` | Clear the current line of Backseat highlighting
 
-Requires curl to be installed. If a buffer contains more than 100 lines, it will be split into multiple <= 100 line requests. 
+If a buffer contains more than 100 lines, it will be split into multiple <= 100 line requests.
+## Requirements
+ * curl
+ * OpenAI API key - You can get yours from [their website](https://platform.openai.com/account/api-keys)
 # Install
 ### Lazy plugin manager
 ```lua
@@ -41,3 +44,6 @@ Requires curl to be installed. If a buffer contains more than 100 lines, it will
 `vim.g.backseat_additional_instruction` | `additional_instruction`, | `nil` | An additional instruction to give the AI, like "Make your responses more brief"
 `vim.g.backseat_highlight_icon` | `highlight.icon` | `''` | The sign column icon to display for each line containing suggestions
 `vim.g.backseat_highlight_group` | `highlight.group` | `'String'` | The `:hi` highlight color group for the icon and the suggestion text 
+
+# More Examples
+![image](https://user-images.githubusercontent.com/32351696/229299250-1fcb4135-2a6a-4663-9637-13af7c0ee7cd.png)
