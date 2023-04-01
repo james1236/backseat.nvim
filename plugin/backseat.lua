@@ -17,7 +17,7 @@ end
 local function get_api_key()
     local api_key = vim.g.backseat_openai_api_key
     if api_key == nil then
-        local message = "No API key found. Please set g:backseat_openai_api_key"
+        local message = "No API key found. Please set openai_api_key in your config"
         vim.fn.confirm(message, "&OK", 1, "Warning")
         return nil
     end
@@ -29,7 +29,7 @@ local function get_model_id()
     if model == nil then
         if vim.g.backseat_model_id_complained == nil then
             local message =
-            "No model id specified. Please set g:backseat_openai_model_id. Defaulting to gpt-3.5-turbo for now" -- "gpt-4"
+            "No model id specified. Please set openai_model_id in your config. Defaulting to gpt-3.5-turbo for now" -- "gpt-4"
             vim.fn.confirm(message, "&OK", 1, "Warning")
             vim.g.backseat_model_id_complained = 1
         end
@@ -44,6 +44,10 @@ local function get_additional_instruction()
         return ""
     end
     return additional_instruction
+end
+
+local function get_split_threshold()
+    return vim.g.backseat_split_threshold
 end
 
 local function get_highlight_icon()
@@ -85,7 +89,7 @@ local function gpt_request(dataJSON, callback, callbackTable)
     vim.fn.jobstart(curlRequest, {
         stdout_buffered = true,
         on_stdout = function(_, data, _)
-            local response = data[1]
+            local response = table.concat(data, "\n")
             local success, responseTable = pcall(vim.json.decode, response)
 
             if success == false or responseTable == nil then
@@ -107,11 +111,9 @@ local function gpt_request(dataJSON, callback, callbackTable)
         end,
         on_stderr = function(_, data, _)
             return data
-            -- return table.concat(data, "\n")
         end,
         on_exit = function(_, data, _)
             return data
-            -- return table.concat(data, "\n")
         end,
     })
 
@@ -126,7 +128,7 @@ local function parse_response(response, partNumberString, bufnr)
 
     -- Loop through each line, and add it to the suggestions table if it starts with line=
     for _, line in ipairs(lines) do
-        if string.sub(line, 1, 5) == "line=" then
+        if (string.sub(line, 1, 5) == "line=") or string.sub(line, 1, 6) == "lines=" then
             -- Add this line to the suggestions table
             table.insert(suggestions, line)
         elseif #suggestions > 0 then
@@ -268,10 +270,11 @@ end
 
 -- Send the current buffer to the AI for readability feedback
 vim.api.nvim_create_user_command("Backseat", function()
-    -- Split the current buffer into groups of 100 lines
+    -- Split the current buffer into groups of lines of size splitThreshold
+    local splitThreshold = get_split_threshold()
     local bufnr = vim.api.nvim_get_current_buf()
     local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    local numRequests = math.ceil(#lines / 100)
+    local numRequests = math.ceil(#lines / splitThreshold)
     local model = get_model_id()
 
     local requestTable = {
@@ -281,8 +284,8 @@ vim.api.nvim_create_user_command("Backseat", function()
 
     local requests = {}
     for i = 1, numRequests do
-        local startingLineNumber = (i - 1) * 100 + 1
-        local text = prepare_code_snippet(bufnr, startingLineNumber, startingLineNumber + 99)
+        local startingLineNumber = (i - 1) * splitThreshold + 1
+        local text = prepare_code_snippet(bufnr, startingLineNumber, startingLineNumber + splitThreshold - 1)
         -- print(text)
 
         -- --Print text line by line
@@ -290,7 +293,9 @@ vim.api.nvim_create_user_command("Backseat", function()
         --     print(line)
         -- end
 
-        text = text .. "\n<system>When responding with line=, " .. get_additional_instruction() .. "</system>"
+        if get_additional_instruction() ~= "" then
+            text = text .. "\n<system>When responding with line=, " .. get_additional_instruction() .. "</system>"
+        end
 
         -- Make a copy of requestTable (value not reference)
         local tempRequestTable = vim.deepcopy(requestTable)
@@ -328,6 +333,11 @@ end
 vim.api.nvim_create_user_command("BackseatAsk", function(opts)
     local bufnr = vim.api.nvim_get_current_buf()
     local text = prepare_code_snippet(bufnr, 1, -1)
+
+    if get_additional_instruction() ~= "" then
+        text = text .. "\n<system>When responding with line=, " .. get_additional_instruction() .. "</system>"
+    end
+
     local bufname = vim.fn.fnamemodify(vim.fn.bufname(bufnr), ":t")
 
     print("Asking AI '" .. opts.args .. "' (in " .. bufname .. ")...")
@@ -342,7 +352,7 @@ vim.api.nvim_create_user_command("BackseatAsk", function(opts)
                 },
                 {
                     role = "user",
-                    content = text .. "\n<system>When responding, " .. get_additional_instruction() .. "</system>"
+                    content = text
                 },
                 {
                     role = "user",
