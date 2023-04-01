@@ -1,17 +1,39 @@
---[[
-
-Not automatically executed, but can be required with require("backseat")
-If there was another file in the lua/backseat directory, it would be required with require("backseat.otherfile")
-require loads a file once, and caches the return value. Running require on that file again will return the cached value but not execute the file's code.
-unless you do `package.loaded["backseat"] = nil` to clear the cache.
-
-The M (module) table is returned by the file, and is the module's public interface.
-
---]]
 local M = {}
 
-function M.setup()
-    print("backseat setup")
+local default_opts = {
+    openai_api_key = nil,
+    openai_model_id = 'gpt-3.5-turbo',
+    additional_instruction = nil,
+    highlight = {
+        icon = '',
+        group = 'String',
+    }
+}
+
+function M.setup(opts)
+    -- Merge default_opts with opts
+    opts = vim.tbl_deep_extend('force', default_opts, opts or {})
+
+    -- Set the module's options
+    if vim.g.backseat_openai_api_key == nil then
+        vim.g.backseat_openai_api_key = opts.openai_api_key
+    end
+
+    if vim.g.backseat_openai_model_id == nil then
+        vim.g.backseat_openai_model_id = opts.openai_model_id
+    end
+
+    if vim.g.backseat_additional_instruction == nil then
+        vim.g.backseat_additional_instruction = opts.additional_instruction
+    end
+
+    if vim.g.backseat_highlight_icon == nil then
+        vim.g.backseat_highlight_icon = opts.highlight.icon
+    end
+
+    if opts.backseat_highlight_group == nil then
+        vim.g.backseat_highlight_group = opts.highlight.group
+    end
 end
 
 return M

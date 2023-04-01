@@ -15,7 +15,8 @@ Some readability issues to consider:
 - Inconsistent naming and code style.
 - Code repetition
 You may identify additional problems. The user submits a small section of code from a larger file.
-Only list lines with readability issues, in the format line=<num>: <issue and proposed solution>]]
+Only list lines with readability issues, in the format line=<num>: <issue and proposed solution>
+Your commentary must fit on a single line]]
         },
         {
             role = "user",
