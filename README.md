@@ -21,7 +21,7 @@ Requires curl to be installed. If a buffer contains more than 100 lines, it will
                 openai_api_key = 'sk-xxxxxxxxxxxxxx', -- Get yours from platform.openai.com/account/api-keys
                 openai_model_id = 'gpt-3.5-turbo', --gpt-4
                 
-                -- additional_instruction = "Make fun of the code", -- (GPT-3 will probably deny this request, but GPT-4 complies)
+                -- additional_instruction = "Respond snarkily", -- (GPT-3 will probably deny this request, but GPT-4 complies)
                 -- highlight = {
                 --     icon = '', -- ''
                 --     group = 'Comment',
