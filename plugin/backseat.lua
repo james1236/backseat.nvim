@@ -17,7 +17,8 @@ end
 local function get_api_key()
     local api_key = vim.g.backseat_openai_api_key
     if api_key == nil then
-        print("No API key found. Please set g:backseat_openai_api_key")
+        local message = "No API key found. Please set g:backseat_openai_api_key"
+        vim.fn.confirm(message, "&OK", 1, "Warning")
         return nil
     end
     return api_key
@@ -27,7 +28,9 @@ local function get_model_id()
     local model = vim.g.backseat_openai_model_id
     if model == nil then
         if vim.g.backseat_model_id_complained == nil then
-            print("No model id specified. Please set g:backseat_openai_model_id. Defaulting to gpt-3.5-turbo for now") -- "gpt-4"
+            local message =
+            "No model id specified. Please set g:backseat_openai_model_id. Defaulting to gpt-3.5-turbo for now" -- "gpt-4"
+            vim.fn.confirm(message, "&OK", 1, "Warning")
             vim.g.backseat_model_id_complained = 1
         end
         return "gpt-3.5-turbo"
@@ -51,7 +54,7 @@ local function get_highlight_group()
     return vim.g.backseat_highlight_group
 end
 
-local function gpt_request(dataJSON)
+local function gpt_request(dataJSON, callback)
     local api_key = get_api_key()
     if api_key == nil then
         return nil
@@ -78,21 +81,41 @@ local function gpt_request(dataJSON)
     )
     -- print(curlRequest)
 
-    local response = vim.fn.system(curlRequest)
-    local success, responseTable = pcall(vim.json.decode, response)
+    -- local response = vim.fn.system(curlRequest)
+    vim.fn.jobstart(curlRequest, {
+        stdout_buffered = true,
+        on_stdout = function(_, data, _)
+            local response = data[1]
+            local success, responseTable = pcall(vim.json.decode, response)
 
-    if success == false or responseTable == nil then
-        print("Bad or no response: " .. response)
-        return nil
-    end
+            if success == false or responseTable == nil then
+                if response == nil then
+                    response = "nil"
+                end
+                print("Bad or no response: " .. response)
+                return nil
+            end
 
-    if responseTable.error ~= nil then
-        print("OpenAI Error: " .. responseTable.error.message)
-        return nil
-    end
+            if responseTable.error ~= nil then
+                print("OpenAI Error: " .. responseTable.error.message)
+                return nil
+            end
 
-    -- print(response)
-    return responseTable
+            -- print(response)
+            callback(responseTable)
+            -- return response
+        end,
+        on_stderr = function(_, data, _)
+            return data
+            -- return table.concat(data, "\n")
+        end,
+        on_exit = function(_, data, _)
+            return data
+            -- return table.concat(data, "\n")
+        end,
+    })
+
+    -- vim.cmd("sleep 10000m")
 end
 
 local function parse_response(response, partNumberString)
@@ -203,6 +226,9 @@ local function prepare_code_snippet(bufnr, startingLineNumber, endingLineNumber)
 end
 
 -- Send the current buffer to the AI for readability feedback
+local function backseat_callback(responseTable)
+end
+
 vim.api.nvim_create_user_command("Backseat", function()
     -- Split the current buffer into groups of 100 lines
     local bufnr = vim.api.nvim_get_current_buf()
@@ -252,7 +278,7 @@ vim.api.nvim_create_user_command("Backseat", function()
     end
 
     for i, requestJSON in ipairs(requests) do
-        local responseTable = gpt_request(requestJSON)
+        local responseTable = gpt_request(requestJSON, backseat_callback)
         if responseTable == nil then
             return nil
         end
@@ -268,11 +294,22 @@ vim.api.nvim_create_user_command("Backseat", function()
 end, {})
 
 -- Use the underlying chat API to ask a question about the current buffer's code
+local function backseat_ask_callback(responseTable)
+    if responseTable == nil then
+        return nil
+    end
+    local message = "AI Says: " .. responseTable.choices[1].message.content
+    vim.fn.confirm(message, "&OK", 1, "Generic")
+end
+
 vim.api.nvim_create_user_command("BackseatAsk", function(opts)
     local bufnr = vim.api.nvim_get_current_buf()
     local text = prepare_code_snippet(bufnr, 1, -1)
+    local bufname = vim.fn.fnamemodify(vim.fn.bufname(bufnr), ":t")
 
-    local response = gpt_request(vim.json.encode(
+    print("Asking AI '" .. opts.args .. "' (in " .. bufname .. ")...")
+
+    gpt_request(vim.json.encode(
         {
             model = get_model_id(),
             messages = {
@@ -282,7 +319,7 @@ vim.api.nvim_create_user_command("BackseatAsk", function(opts)
                 },
                 {
                     role = "user",
-                    content = text
+                    content = text .. "\n<system>When responding, " .. get_additional_instruction() .. "</system>"
                 },
                 {
                     role = "user",
@@ -290,12 +327,7 @@ vim.api.nvim_create_user_command("BackseatAsk", function(opts)
                 }
             },
         }
-    ))
-
-    if response == nil then
-        return nil
-    end
-    print("AI Says: " .. response.choices[1].message.content)
+    ), backseat_ask_callback)
 end, { nargs = "+" })
 
 -- Clear all backseat virtual text and signs
