@@ -54,7 +54,7 @@ local function get_highlight_group()
     return vim.g.backseat_highlight_group
 end
 
-local function gpt_request(dataJSON, callback)
+local function gpt_request(dataJSON, callback, callbackTable)
     local api_key = get_api_key()
     if api_key == nil then
         return nil
@@ -102,7 +102,7 @@ local function gpt_request(dataJSON, callback)
             end
 
             -- print(response)
-            callback(responseTable)
+            callback(responseTable, callbackTable)
             -- return response
         end,
         on_stderr = function(_, data, _)
@@ -115,10 +115,10 @@ local function gpt_request(dataJSON, callback)
         end,
     })
 
-    -- vim.cmd("sleep 10000m")
+    -- vim.cmd("sleep 10000m") -- Sleep to give time to read the error messages
 end
 
-local function parse_response(response, partNumberString)
+local function parse_response(response, partNumberString, bufnr)
     -- split response.choices[1].message.content into lines
     local lines = vim.split(response.choices[1].message.content, "\n")
     --Suggestions may span multiple lines, so we need to change the list of lines into a list of suggestions
@@ -163,8 +163,6 @@ local function parse_response(response, partNumberString)
         -- Get the message
         local message = string.sub(suggestion, string.find(suggestion, ":") + 1, string.len(suggestion))
         -- print("Line " .. lineNum .. ": " .. message)
-        -- Get the buffer number
-        local bufnr = vim.api.nvim_get_current_buf()
 
         -- Split suggestion into line, highlight group pairs
         local suggestionLines = vim.split(message, "\n")
@@ -225,10 +223,50 @@ local function prepare_code_snippet(bufnr, startingLineNumber, endingLineNumber)
     return text
 end
 
--- Send the current buffer to the AI for readability feedback
-local function backseat_callback(responseTable)
+local backseat_callback
+local function backseat_send_from_request_queue(callbackTable)
+    -- Stop if there are no more requests in the queue
+    if (#callbackTable.requests == 0) then
+        return nil
+    end
+
+    -- Get bufname without the path
+    local bufname = vim.fn.fnamemodify(vim.fn.bufname(callbackTable.bufnr), ":t")
+
+    if callbackTable.requestIndex == 0 then
+        if callbackTable.startingRequestCount == 1 then
+            print("Sending " .. bufname .. " (" .. callbackTable.lineCount .. " lines) and waiting for response...")
+        else
+            print("Sending " ..
+            bufname .. " (split into " .. callbackTable.startingRequestCount .. " requests) and waiting for response...")
+        end
+    end
+
+    -- Get the first request from the queue
+    local requestJSON = table.remove(callbackTable.requests, 1)
+    callbackTable.requestIndex = callbackTable.requestIndex + 1
+
+    gpt_request(requestJSON, backseat_callback, callbackTable)
 end
 
+-- Callback for a backseat request
+function backseat_callback(responseTable, callbackTable)
+    if responseTable ~= nil then
+        if callbackTable.startingRequestCount == 1 then
+            parse_response(responseTable, "", callbackTable.bufnr)
+        else
+            parse_response(responseTable,
+                " (request " .. callbackTable.requestIndex .. " of " .. callbackTable.startingRequestCount .. ")",
+                callbackTable.bufnr)
+        end
+    end
+
+    if callbackTable.requestIndex < callbackTable.startingRequestCount + 1 then
+        backseat_send_from_request_queue(callbackTable)
+    end
+end
+
+-- Send the current buffer to the AI for readability feedback
 vim.api.nvim_create_user_command("Backseat", function()
     -- Split the current buffer into groups of 100 lines
     local bufnr = vim.api.nvim_get_current_buf()
@@ -268,28 +306,13 @@ vim.api.nvim_create_user_command("Backseat", function()
         -- print(requestJSON)
     end
 
-    -- Get bufname without the path
-    local bufname = vim.fn.fnamemodify(vim.fn.bufname(bufnr), ":t")
-
-    if #requests == 1 then
-        print("Sending " .. bufname .. " (" .. #lines .. " lines) and waiting for response...")
-    else
-        print("Sending " .. bufname .. " (split into " .. #requests .. " requests) and waiting for response...")
-    end
-
-    for i, requestJSON in ipairs(requests) do
-        local responseTable = gpt_request(requestJSON, backseat_callback)
-        if responseTable == nil then
-            return nil
-        end
-
-        if #requests == 1 then
-            parse_response(responseTable, "")
-        else
-            parse_response(responseTable, " (request " .. i .. " of " .. #requests .. ")")
-        end
-    end
-
+    backseat_send_from_request_queue({
+        requests = requests,
+        startingRequestCount = numRequests,
+        requestIndex = 0,
+        bufnr = bufnr,
+        lineCount = #lines,
+    })
     -- require("backseat.main"):run()
 end, {})
 
