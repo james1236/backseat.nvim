@@ -1,6 +1,6 @@
 # backseat.nvim
 ### A neovim plugin that uses GPT to highlight and explain code readability issues
-![image](https://user-images.githubusercontent.com/32351696/229296685-f110d15d-6727-42ba-a485-f66abfe7deb7.png)
+![image](https://user-images.githubusercontent.com/32351696/229299250-1fcb4135-2a6a-4663-9637-13af7c0ee7cd.png)
 
 # Commands
 | User Command | Purpose |
