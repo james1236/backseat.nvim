@@ -1,5 +1,5 @@
 # backseat.nvim
-### A neovim plugin that uses GPT to highlight and explain code readability issues
+A neovim plugin that uses GPT to highlight and explain code readability issues. Get unsolicited advice of dubious quality in never-before-seen quantities!
 ![image](https://user-images.githubusercontent.com/32351696/229314187-f229664f-f396-4840-9765-8118810b3dae.png)
 
 # Commands
@@ -17,22 +17,22 @@ If a buffer contains more than 100 lines, it will be split into multiple <= 100 
 # Install
 ### Lazy plugin manager
 ```lua
-    {
-        "james1236/backseat.nvim",
-        config = function()
-            require("backseat").setup({
-                openai_api_key = 'sk-xxxxxxxxxxxxxx', -- Get yours from platform.openai.com/account/api-keys
-                openai_model_id = 'gpt-3.5-turbo', --gpt-4
-                split_threshold = 100,
-                
-                -- additional_instruction = "Respond snarkily", -- (GPT-3 will probably deny this request, but GPT-4 complies)
-                -- highlight = {
-                --     icon = '', -- ''
-                --     group = 'Comment',
-                -- }
-            })
-        end
-    },
+{
+    "james1236/backseat.nvim",
+    config = function()
+        require("backseat").setup({
+            openai_api_key = 'sk-xxxxxxxxxxxxxx', -- Get yours from platform.openai.com/account/api-keys
+            openai_model_id = 'gpt-3.5-turbo', --gpt-4
+            split_threshold = 100,
+
+            -- additional_instruction = "Respond snarkily", -- (GPT-3 will probably deny this request, but GPT-4 complies)
+            -- highlight = {
+            --     icon = '', -- ''
+            --     group = 'Comment',
+            -- }
+        })
+    end
+},
 ```
 ### The result of using `additional_instruction = "Respond snarkily"`
 ![image](https://user-images.githubusercontent.com/32351696/229297495-6d145848-10bf-43eb-8c2a-ab4264f514b1.png)
