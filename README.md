@@ -1,5 +1,6 @@
 # backseat.nvim
 A neovim plugin that uses GPT to highlight and explain code readability issues. Get unsolicited advice of dubious quality in never-before-seen quantities!
+<br><br>
 ![image](https://user-images.githubusercontent.com/32351696/229314187-f229664f-f396-4840-9765-8118810b3dae.png)
 
 # Commands
@@ -23,8 +24,8 @@ If a buffer contains more than 100 lines, it will be split into multiple <= 100 
         require("backseat").setup({
             openai_api_key = 'sk-xxxxxxxxxxxxxx', -- Get yours from platform.openai.com/account/api-keys
             openai_model_id = 'gpt-3.5-turbo', --gpt-4
-            split_threshold = 100,
 
+            -- split_threshold = 100,
             -- additional_instruction = "Respond snarkily", -- (GPT-3 will probably deny this request, but GPT-4 complies)
             -- highlight = {
             --     icon = '', -- ''
@@ -40,9 +41,9 @@ If a buffer contains more than 100 lines, it will be split into multiple <= 100 
 # Config 
 | Setup Table Name | Default | Purpose |
 | --- | --- | -- |
-| `openai_api_key` | `nil` | Your OpenAI API key, needed to access language models
+| `openai_api_key` | `nil` | Your OpenAI API key, needed to use their language models
 | `openai_model_id` | `'gpt-3.5-turbo'` | The model's identifier, such as gpt-3.5-turbo and gpt-4
-| `split_threshold` | `100` | The number of lines per request (lower uses more tokens but increases number of suggestions)
+| `split_threshold` | `100` | The number of lines of code sent per request (lower uses more tokens but increases number of suggestions)
 | `additional_instruction`, | `nil` | An additional instruction to give the AI, like "Make your responses more brief"
 | `highlight.icon` | `''` | The sign column icon to display for each line containing suggestions
 | `highlight.group` | `'String'` | The `:hi` highlight color group for the icon and the suggestion text 
