@@ -5,23 +5,25 @@ end
 vim.g.loaded_backseat = true
 
 require("backseat").setup()
-local fewshot = require("backseat.fewshot")
+local fewshot = require("backseat.fewshot") -- The training messages
 
 -- Create namespace for backseat suggestions
-local backseat_ns = vim.api.nvim_create_namespace("backseat")
+local backseatNamespace = vim.api.nvim_create_namespace("backseat")
 
 local function print(msg)
     _G.print("Backseat > " .. msg)
 end
 
 local function get_api_key()
+    -- Priority: 1. g:backseat_openai_api_key 2. $OPENAI_API_KEY 3. Prompt user
     local api_key = vim.g.backseat_openai_api_key
     if api_key == nil then
         local key = os.getenv("OPENAI_API_KEY")
         if key ~= nil then
             return key
         end
-        local message = "No API key found. Please set openai_api_key in your config"
+        local message =
+        "No API key found. Please set openai_api_key in the setup table or set the $OPENAI_API_KEY environment variable."
         vim.fn.confirm(message, "&OK", 1, "Warning")
         return nil
     end
@@ -33,7 +35,7 @@ local function get_model_id()
     if model == nil then
         if vim.g.backseat_model_id_complained == nil then
             local message =
-            "No model id specified. Please set openai_model_id in your config. Defaulting to gpt-3.5-turbo for now" -- "gpt-4"
+            "No model id specified. Please set openai_model_id in the setup table. Defaulting to gpt-3.5-turbo for now" -- "gpt-4"
             vim.fn.confirm(message, "&OK", 1, "Warning")
             vim.g.backseat_model_id_complained = 1
         end
@@ -43,11 +45,7 @@ local function get_model_id()
 end
 
 local function get_additional_instruction()
-    local additional_instruction = vim.g.backseat_additional_instruction
-    if additional_instruction == nil then
-        return ""
-    end
-    return additional_instruction
+    return vim.g.backseat_additional_instruction or ""
 end
 
 local function get_split_threshold()
@@ -70,7 +68,7 @@ local function gpt_request(dataJSON, callback, callbackTable)
 
     -- Check if curl is installed
     if vim.fn.executable("curl") == 0 then
-        print("curl installation not found. Please install curl to use Backseat")
+        vim.fn.confirm("curl installation not found. Please install curl to use Backseat", "&OK", 1, "Warning")
         return nil
     end
 
@@ -130,13 +128,13 @@ local function parse_response(response, partNumberString, bufnr)
     --Suggestions may span multiple lines, so we need to change the list of lines into a list of suggestions
     local suggestions = {}
 
-    -- Loop through each line, and add it to the suggestions table if it starts with line=
+    -- Add each line to the suggestions table if it starts with line= or lines=
     for _, line in ipairs(lines) do
         if (string.sub(line, 1, 5) == "line=") or string.sub(line, 1, 6) == "lines=" then
             -- Add this line to the suggestions table
             table.insert(suggestions, line)
         elseif #suggestions > 0 then
-            -- Append lines that don't start with line= to the previous suggestion
+            -- Append lines that don't start with line= or lines= to the previous suggestion
             suggestions[#suggestions] = suggestions[#suggestions] .. "\n" .. line
         end
     end
@@ -172,16 +170,16 @@ local function parse_response(response, partNumberString, bufnr)
 
         -- Split suggestion into line, highlight group pairs
         local suggestionLines = vim.split(message, "\n")
-        -- Get the width of screen
-        local codeWidth = vim.api.nvim_win_get_width(0) - 20
+        -- Get the width of the screen
+        local screenWidth = vim.api.nvim_win_get_width(0) - 20
         -- Split any suggestionLines that are too long
         local newLines = {}
         for _, line in ipairs(suggestionLines) do
-            if string.len(line) >= codeWidth then
+            if string.len(line) >= screenWidth then
                 local splitLines = vim.split(line, " ")
                 local currentLine = ""
                 for _, word in ipairs(splitLines) do
-                    if string.len(currentLine) + string.len(word) > codeWidth then
+                    if string.len(currentLine) + string.len(word) > screenWidth then
                         table.insert(newLines, currentLine)
                         currentLine = word
                     else
@@ -203,12 +201,14 @@ local function parse_response(response, partNumberString, bufnr)
         end
 
         -- Add suggestion virtual text and a lightbulb icon to the sign column
-        vim.api.nvim_buf_set_extmark(bufnr, backseat_ns, lineNum - 1, 0, {
+        vim.api.nvim_buf_set_extmark(bufnr, backseatNamespace, lineNum - 1, 0, {
             virt_text_pos = "overlay",
             virt_lines = pairs,
             hl_mode = "combine",
             sign_text = get_highlight_icon(),
             sign_hl_group = get_highlight_group(),
+            -- Get the icon to display one line further down
+            -- sign_priority = 100,
         })
         ::continue::
     end
@@ -218,11 +218,11 @@ local function prepare_code_snippet(bufnr, startingLineNumber, endingLineNumber)
     -- print("Preparing code snippet from lines " .. startingLineNumber .. " to " .. endingLineNumber)
     local lines = vim.api.nvim_buf_get_lines(bufnr, startingLineNumber - 1, endingLineNumber, false)
 
-    -- Get number of digits for the highest line number
-    local numDigits = string.len(tostring(#lines + startingLineNumber))
+    -- Get the max number of digits needed to display a line number
+    local maxDigits = string.len(tostring(#lines + startingLineNumber))
     -- Prepend each line with its line number zero padded to numDigits
     for i, line in ipairs(lines) do
-        lines[i] = string.format("%0" .. numDigits .. "d", i - 1 + startingLineNumber) .. " " .. line
+        lines[i] = string.format("%0" .. maxDigits .. "d", i - 1 + startingLineNumber) .. " " .. line
     end
 
     local text = table.concat(lines, "\n")
@@ -370,12 +370,12 @@ end, { nargs = "+" })
 -- Clear all backseat virtual text and signs
 vim.api.nvim_create_user_command("BackseatClear", function()
     local bufnr = vim.api.nvim_get_current_buf()
-    vim.api.nvim_buf_clear_namespace(bufnr, backseat_ns, 0, -1)
+    vim.api.nvim_buf_clear_namespace(bufnr, backseatNamespace, 0, -1)
 end, {})
 
 -- Clear backseat virtual text and signs for that line
 vim.api.nvim_create_user_command("BackseatClearLine", function()
     local bufnr = vim.api.nvim_get_current_buf()
     local lineNum = vim.api.nvim_win_get_cursor(0)[1]
-    vim.api.nvim_buf_clear_namespace(bufnr, backseat_ns, lineNum - 1, lineNum)
+    vim.api.nvim_buf_clear_namespace(bufnr, backseatNamespace, lineNum - 1, lineNum)
 end, {})
