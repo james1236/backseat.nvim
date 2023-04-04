@@ -22,6 +22,7 @@ If a buffer contains more than 100 lines, it will be split into multiple <= 100 
     "james1236/backseat.nvim",
     config = function()
         require("backseat").setup({
+            -- the key could be set in the environment as OPENAI_API_KEY
             openai_api_key = 'sk-xxxxxxxxxxxxxx', -- Get yours from platform.openai.com/account/api-keys
             openai_model_id = 'gpt-3.5-turbo', --gpt-4
 

@@ -17,6 +17,10 @@ end
 local function get_api_key()
     local api_key = vim.g.backseat_openai_api_key
     if api_key == nil then
+        local key = os.getenv("OPENAI_API_KEY")
+        if key ~= nil then
+            return key
+        end
         local message = "No API key found. Please set openai_api_key in your config"
         vim.fn.confirm(message, "&OK", 1, "Warning")
         return nil
