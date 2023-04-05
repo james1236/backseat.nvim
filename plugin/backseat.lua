@@ -60,6 +60,32 @@ local function get_highlight_group()
     return vim.g.backseat_highlight_group
 end
 
+local function split_long_text(text)
+    local lines = vim.split(text, "\n")
+    -- Get the width of the screen
+    local screenWidth = vim.api.nvim_win_get_width(0) - 20
+    -- Split any suggestionLines that are too long
+    local newLines = {}
+    for _, line in ipairs(lines) do
+        if string.len(line) >= screenWidth then
+            local splitLines = vim.split(line, " ")
+            local currentLine = ""
+            for _, word in ipairs(splitLines) do
+                if string.len(currentLine) + string.len(word) > screenWidth then
+                    table.insert(newLines, currentLine)
+                    currentLine = word
+                else
+                    currentLine = currentLine .. " " .. word
+                end
+            end
+            table.insert(newLines, currentLine)
+        else
+            table.insert(newLines, line)
+        end
+    end
+    return newLines
+end
+
 local function gpt_request(dataJSON, callback, callbackTable)
     local api_key = get_api_key()
     if api_key == nil then
@@ -199,28 +225,7 @@ local function parse_response(response, partNumberString, bufnr)
         -- print("Line " .. lineNum .. ": " .. message)
 
         -- Split suggestion into line, highlight group pairs
-        local suggestionLines = vim.split(message, "\n")
-        -- Get the width of the screen
-        local screenWidth = vim.api.nvim_win_get_width(0) - 20
-        -- Split any suggestionLines that are too long
-        local newLines = {}
-        for _, line in ipairs(suggestionLines) do
-            if string.len(line) >= screenWidth then
-                local splitLines = vim.split(line, " ")
-                local currentLine = ""
-                for _, word in ipairs(splitLines) do
-                    if string.len(currentLine) + string.len(word) > screenWidth then
-                        table.insert(newLines, currentLine)
-                        currentLine = word
-                    else
-                        currentLine = currentLine .. " " .. word
-                    end
-                end
-                table.insert(newLines, currentLine)
-            else
-                table.insert(newLines, line)
-            end
-        end
+        local newLines = split_long_text(message)
 
         local pairs = {}
         for i, line in ipairs(newLines) do
@@ -361,6 +366,10 @@ local function backseat_ask_callback(responseTable)
         return nil
     end
     local message = "AI Says: " .. responseTable.choices[1].message.content
+
+    -- Split long messages into multiple lines
+    message = table.concat(split_long_text(message), "\n")
+
     vim.fn.confirm(message, "&OK", 1, "Generic")
 end
 
