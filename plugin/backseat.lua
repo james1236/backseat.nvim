@@ -96,15 +96,23 @@ local function gpt_request(dataJSON, callback, callbackTable)
     else
         -- Windows
         -- Create temp file
-        local tempFile = vim.fn.tempname()
+        local tempFilePath = vim.fn.tempname()
+        local tempFile = io.open(tempFilePath, "w")
+        if tempFile == nil then
+            print("Error creating temp file")
+            return nil
+        end
         -- Write dataJSON to temp file
-        vim.fn.writefile({ dataJSON }, tempFile)
+        tempFile:write(dataJSON)
+        tempFile:close()
+
         -- Escape the name of the temp file for windows command line
-        local tempFileEscaped = vim.fn.fnameescape(tempFile)
+        local tempFilePathEscaped = vim.fn.fnameescape(tempFilePath)
 
         curlRequest = string.format(
             "curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
-            api_key .. "\" --data-binary \"@" .. tempFileEscaped .. "\" & del " .. tempFileEscaped .. " > nul 2>&1"
+            api_key ..
+            "\" --data-binary \"@" .. tempFilePathEscaped .. "\" & del " .. tempFilePathEscaped .. " > nul 2>&1"
         )
     end
 
