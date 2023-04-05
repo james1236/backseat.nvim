@@ -368,7 +368,7 @@ local function backseat_ask_callback(responseTable)
     local message = "AI Says: " .. responseTable.choices[1].message.content
 
     -- Split long messages into multiple lines
-    message = table.concat(split_long_text(message), "\n")
+    message = table.concat(split_long_text(message), "\r\n")
 
     vim.fn.confirm(message, "&OK", 1, "Generic")
 end
