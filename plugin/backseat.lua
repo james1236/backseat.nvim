@@ -79,15 +79,39 @@ local function gpt_request(dataJSON, callback, callbackTable)
         dataHex = dataHex .. "\\x" .. hex
     end
 
-    local curlRequest = string.format(
-        "echo -en '" ..
-        dataHex ..
-        "' | curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
-        api_key .. "\" --data-binary @-"
-    )
-    -- print(curlRequest)
 
-    -- local response = vim.fn.system(curlRequest)
+    local curlRequest
+
+    -- Check if the user is on windows
+    local isWindows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+
+    if isWindows ~= true then
+        -- Linux
+        curlRequest = string.format(
+            "echo -en '" ..
+            dataHex ..
+            "' | curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
+            api_key .. "\" --data-binary @-"
+        )
+    else
+        -- Windows
+        -- Check if xxd is installed
+        if vim.fn.executable("xxd") == 0 then
+            vim.fn.confirm("xxd installation not found. Please install xxd to use Backseat on Windows", "&OK", 1,
+                "Warning")
+            return nil
+        end
+
+        curlRequest = string.format(
+            "echo \"" ..
+            dataHex:gsub("\\x", "") ..
+            "\" | xxd -r -p - | curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
+            api_key .. "\" --data-binary @-"
+        )
+    end
+
+    -- vim.fn.confirm(curlRequest, "&OK", 1, "Warning")
+
     vim.fn.jobstart(curlRequest, {
         stdout_buffered = true,
         on_stdout = function(_, data, _)
