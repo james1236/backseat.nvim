@@ -84,7 +84,6 @@ local function gpt_request(dataJSON, callback, callbackTable)
 
     -- Check if the user is on windows
     local isWindows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
-    isWindows = true
 
     if isWindows ~= true then
         -- Linux
