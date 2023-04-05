@@ -14,7 +14,6 @@ A neovim plugin that uses GPT to highlight and explain code readability issues. 
 If a buffer contains more than 100 lines, it will be split into multiple <= 100 line requests.
 ## Requirements
  * curl
- * xxd (Only required on Windows)
  * OpenAI API key - You can get yours with a free account from [their website](https://platform.openai.com/account/api-keys). If you don't have any more free credits, usage is very cheap at ~$0.004 per 100 lines submitted.
 # Install
 ### Lazy plugin manager

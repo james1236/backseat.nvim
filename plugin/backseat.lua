@@ -84,6 +84,7 @@ local function gpt_request(dataJSON, callback, callbackTable)
 
     -- Check if the user is on windows
     local isWindows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
+    isWindows = true
 
     if isWindows ~= true then
         -- Linux
@@ -95,18 +96,16 @@ local function gpt_request(dataJSON, callback, callbackTable)
         )
     else
         -- Windows
-        -- Check if xxd is installed
-        if vim.fn.executable("xxd") == 0 then
-            vim.fn.confirm("xxd installation not found. Please install xxd to use Backseat on Windows", "&OK", 1,
-                "Warning")
-            return nil
-        end
+        -- Create temp file
+        local tempFile = vim.fn.tempname()
+        -- Write dataJSON to temp file
+        vim.fn.writefile({ dataJSON }, tempFile)
+        -- Escape the name of the temp file for windows command line
+        local tempFileEscaped = vim.fn.fnameescape(tempFile)
 
         curlRequest = string.format(
-            "echo \"" ..
-            dataHex:gsub("\\x", "") ..
-            "\" | xxd -r -p - | curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
-            api_key .. "\" --data-binary @-"
+            "curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
+            api_key .. "\" --data-binary \"@" .. tempFileEscaped .. "\" & del " .. tempFileEscaped .. " > nul 2>&1"
         )
     end
 
