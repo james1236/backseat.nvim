@@ -9,7 +9,7 @@ local default_opts = {
     highlight = {
         icon = '',
         group = 'String',
-    },
+    }
 }
 
 function M.setup(opts)
