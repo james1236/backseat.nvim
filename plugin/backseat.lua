@@ -10,6 +10,13 @@ local fewshot = require("backseat.fewshot") -- The training messages
 -- Create namespace for backseat suggestions
 local backseatNamespace = vim.api.nvim_create_namespace("backseat")
 
+-- Invisible backseat diagnostics
+vim.diagnostic.config({
+    virtual_text = false,
+    underline = false,
+    signs = false,
+}, backseatNamespace)
+
 local function print(msg)
     _G.print("Backseat > " .. msg)
 end
@@ -197,15 +204,25 @@ local function parse_response(response, partNumberString, bufnr)
         response.usage.total_tokens .. " tokens from model " .. get_model_id() .. partNumberString)
     end
 
+    -- Clear the backseat namespace
+    vim.api.nvim_buf_clear_namespace(bufnr, backseatNamespace, 0, -1)
+
+    -- Reset diagnostics
+    vim.diagnostic.reset(backseatNamespace, bufnr)
+
+    local diagnostics = {}
+
     -- Act on each suggestion
     for _, suggestion in ipairs(suggestions) do
         -- Get the line number
         local lineString = string.sub(suggestion, 6, string.find(suggestion, ":") - 1)
         -- The string may be in the format "line=1-3", so we can extract the first number
         if string.find(lineString, "-") ~= nil then
+            endLineString = string.sub(lineString, string.find(lineString, "-") + 1, string.len(lineString))
             lineString = string.sub(lineString, 1, string.find(lineString, "-") - 1)
         end
         local lineNum = tonumber(lineString)
+        local endLineNum = tonumber(endLineString)
 
         if lineNum == nil then
             -- print("Bad line number: " .. line)
@@ -236,8 +253,27 @@ local function parse_response(response, partNumberString, bufnr)
             -- Get the icon to display one line further down
             -- sign_priority = 100,
         })
+
+        if endLineNum ~= nil then
+            endLineNum = endLineNum - 1
+        end
+
+        -- Add the diagnostic
+        diagnostics[#diagnostics + 1] = {
+            bufnr = bufnr,
+            lnum = lineNum - 1,
+            end_lnum = endLineNum,
+            col = 0,
+            severity = vim.diagnostic.severity.HINT,
+            source = "backseat",
+            message = message,
+        }
         ::continue::
     end
+
+    -- Apply the diagnostsics
+    vim.diagnostic.set(backseatNamespace, bufnr, diagnostics)
+    -- TODO: Fix diagnostics and extmarks from prior requests being removed for files made of multiple requests
 end
 
 local function prepare_code_snippet(bufnr, startingLineNumber, endingLineNumber)
@@ -401,6 +437,7 @@ end, { nargs = "+" })
 vim.api.nvim_create_user_command("BackseatClear", function()
     local bufnr = vim.api.nvim_get_current_buf()
     vim.api.nvim_buf_clear_namespace(bufnr, backseatNamespace, 0, -1)
+    vim.diagnostic.reset(backseatNamespace, bufnr)
 end, {})
 
 -- Clear backseat virtual text and signs for that line
@@ -408,4 +445,5 @@ vim.api.nvim_create_user_command("BackseatClearLine", function()
     local bufnr = vim.api.nvim_get_current_buf()
     local lineNum = vim.api.nvim_win_get_cursor(0)[1]
     vim.api.nvim_buf_clear_namespace(bufnr, backseatNamespace, lineNum - 1, lineNum)
+    -- TODO: Clear one diagnostic at a time
 end, {})
