@@ -341,8 +341,7 @@ vim.api.nvim_create_user_command("Backseat", function()
         end
 
 		if get_openai_languages() ~= "" then
-			-- text = text .. "\nTranslate the response after the text 'line=' into " .. get_openai_languages() .. ""
-			text = text .. "\nRespond only in " .. get_openai_languages() .. ", but keep the text 'line=' in english"
+			text = text .. "\nRespond the <issue and proposed solution> part in " .. get_openai_languages() .. ", but keep the line=<num>: part in english"
 		end
 
         -- Make a copy of requestTable (value not reference)
