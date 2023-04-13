@@ -25,7 +25,7 @@ If a buffer contains more than 100 lines, it will be split into multiple <= 100 
             -- Alternatively, set the env var $OPENAI_API_KEY by putting "export OPENAI_API_KEY=sk-xxxxx" in your ~/.bashrc
             openai_api_key = 'sk-xxxxxxxxxxxxxx', -- Get yours from platform.openai.com/account/api-keys
             openai_model_id = 'gpt-3.5-turbo', --gpt-4 (If you do not have access to a model, it says "The model does not exist")
-            language = 'english', -- Set reply language
+            -- language = 'english', -- Such as 'japanese', 'french', 'pirate', 'LOLCAT'
             -- split_threshold = 100,
             -- additional_instruction = "Respond snarkily", -- (GPT-3 will probably deny this request, but GPT-4 complies)
             -- highlight = {
@@ -44,6 +44,7 @@ If a buffer contains more than 100 lines, it will be split into multiple <= 100 
 | --- | --- | -- |
 | `openai_api_key` | `nil` | Your OpenAI API key, needed to use their language models
 | `openai_model_id` | `'gpt-3.5-turbo'` | The model's identifier, such as gpt-3.5-turbo and gpt-4
+| `language` | `'english'` | The language of suggestions, such as 'japanese', 'french' or made up ones like 'pirate', 'LOLCAT'
 | `split_threshold` | `100` | The max number of lines of code sent per request (lower uses more tokens but increases number of suggestions)
 | `additional_instruction`, | `nil` | An additional instruction to give the AI, like "Make your responses more brief"
 | `highlight.icon` | `''` | The sign column icon to display for each line containing suggestions

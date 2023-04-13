@@ -44,8 +44,8 @@ local function get_model_id()
     return model
 end
 
-local function get_openai_language()
-	return vim.g.backseat_openai_language
+local function get_language()
+    return vim.g.backseat_language
 end
 
 local function get_additional_instruction()
@@ -324,19 +324,13 @@ vim.api.nvim_create_user_command("Backseat", function()
         local text = prepare_code_snippet(bufnr, startingLineNumber, startingLineNumber + splitThreshold - 1)
         -- print(text)
 
-        -- --Print text line by line
-        -- for _, line in ipairs(vim.split(text, "\n")) do
-        --     print(line)
-        -- end
-
         if get_additional_instruction() ~= "" then
-            -- text = text .. "\nWhen responding with line=, " .. get_additional_instruction()
             text = text .. "\n" .. get_additional_instruction()
         end
 
-		if get_openai_language() ~= "" then
-			text = text .. "\nRespond only in " .. get_openai_language() .. ", but keep the 'line=<num>:' part in english"
-		end
+        if get_language() ~= "" and get_language() ~= "english" then
+            text = text .. "\nRespond only in " .. get_language() .. ", but keep the 'line=<num>:' part in english"
+        end
 
         -- Make a copy of requestTable (value not reference)
         local tempRequestTable = vim.deepcopy(requestTable)

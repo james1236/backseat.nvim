@@ -25,8 +25,8 @@ function M.setup(opts)
     vim.g.backseat_openai_model_id = opts.openai_model_id
     -- end
 
-    -- if vim.g.backseat_openai_language == nil then
-    vim.g.backseat_openai_language = opts.language
+    -- if vim.g.backseat_language == nil then
+    vim.g.backseat_language = opts.language
     -- end
 
     -- if vim.g.backseat_additional_instruction == nil then
