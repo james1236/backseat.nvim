@@ -102,15 +102,21 @@ local function gpt_request(dataJSON, callback, callbackTable)
         return nil
     end
 
-    -- Convert dataJSON to a hex string using string.byte so that it can be passed without escaping issues
-    local dataHex = ""
-    for i = 1, #dataJSON do
-        local hex = string.format("%02x", string.byte(dataJSON, i))
-        dataHex = dataHex .. "\\x" .. hex
-    end
-
-
     local curlRequest
+
+    -- Create temp file
+    local tempFilePath = vim.fn.tempname()
+    local tempFile = io.open(tempFilePath, "w")
+    if tempFile == nil then
+        print("Error creating temp file")
+        return nil
+    end
+    -- Write dataJSON to temp file
+    tempFile:write(dataJSON)
+    tempFile:close()
+
+    -- Escape the name of the temp file for command line
+    local tempFilePathEscaped = vim.fn.fnameescape(tempFilePath)
 
     -- Check if the user is on windows
     local isWindows = vim.fn.has("win32") == 1 or vim.fn.has("win64") == 1
@@ -118,27 +124,12 @@ local function gpt_request(dataJSON, callback, callbackTable)
     if isWindows ~= true then
         -- Linux
         curlRequest = string.format(
-            "echo -en '" ..
-            dataHex ..
-            "' | curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
-            api_key .. "\" --data-binary @-"
+            "curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
+            api_key ..
+            "\" --data-binary \"@" .. tempFilePathEscaped .. "\"; rm " .. tempFilePathEscaped .. " > /dev/null 2>&1"
         )
     else
         -- Windows
-        -- Create temp file
-        local tempFilePath = vim.fn.tempname()
-        local tempFile = io.open(tempFilePath, "w")
-        if tempFile == nil then
-            print("Error creating temp file")
-            return nil
-        end
-        -- Write dataJSON to temp file
-        tempFile:write(dataJSON)
-        tempFile:close()
-
-        -- Escape the name of the temp file for windows command line
-        local tempFilePathEscaped = vim.fn.fnameescape(tempFilePath)
-
         curlRequest = string.format(
             "curl -s https://api.openai.com/v1/chat/completions -H \"Content-Type: application/json\" -H \"Authorization: Bearer " ..
             api_key ..
@@ -222,7 +213,9 @@ local function parse_response(response, partNumberString, bufnr)
 
         if lineNum == nil then
             -- print("Bad line number: " .. line)
-            goto continue
+            -- If the line number is bad, just add the suggestion to the first line
+            lineNum = 1
+            -- goto continue
         end
         -- Get the message
         local message = string.sub(suggestion, string.find(suggestion, ":") + 1, string.len(suggestion))
@@ -249,7 +242,7 @@ local function parse_response(response, partNumberString, bufnr)
             -- Get the icon to display one line further down
             -- sign_priority = 100,
         })
-        ::continue::
+        -- ::continue::
     end
 end
 
@@ -337,7 +330,8 @@ vim.api.nvim_create_user_command("Backseat", function()
         -- end
 
         if get_additional_instruction() ~= "" then
-            text = text .. "\n<system>When responding with line=, " .. get_additional_instruction() .. "</system>"
+            -- text = text .. "\nWhen responding with line=, " .. get_additional_instruction()
+            text = text .. "\n" .. get_additional_instruction()
         end
 
 		if get_openai_languages() ~= "" then
