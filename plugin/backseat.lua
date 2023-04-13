@@ -374,7 +374,11 @@ vim.api.nvim_create_user_command("BackseatAsk", function(opts)
     local text = prepare_code_snippet(bufnr, 1, -1)
 
     if get_additional_instruction() ~= "" then
-        text = text .. "\n<system>When responding with line=, " .. get_additional_instruction() .. "</system>"
+        text = text .. "\n" .. get_additional_instruction()
+    end
+
+    if get_language() ~= "" and get_language() ~= "english" then
+        text = text .. "\nRespond only in " .. get_language()
     end
 
     local bufname = vim.fn.fnamemodify(vim.fn.bufname(bufnr), ":t")
