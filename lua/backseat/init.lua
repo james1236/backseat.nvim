@@ -3,6 +3,7 @@ local M = {}
 local default_opts = {
     openai_api_key = nil,
     openai_model_id = 'gpt-3.5-turbo',
+    language = 'english',
     additional_instruction = nil,
     split_threshold = 100,
     highlight = {
@@ -22,6 +23,10 @@ function M.setup(opts)
 
     -- if vim.g.backseat_openai_model_id == nil then
     vim.g.backseat_openai_model_id = opts.openai_model_id
+    -- end
+
+    -- if vim.g.backseat_openai_language == nil then
+    vim.g.backseat_openai_language = opts.language
     -- end
 
     -- if vim.g.backseat_additional_instruction == nil then
