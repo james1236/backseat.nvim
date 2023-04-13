@@ -209,7 +209,9 @@ local function parse_response(response, partNumberString, bufnr)
 
         if lineNum == nil then
             -- print("Bad line number: " .. line)
-            goto continue
+            -- If the line number is bad, just add the suggestion to the first line
+            lineNum = 1
+            -- goto continue
         end
         -- Get the message
         local message = string.sub(suggestion, string.find(suggestion, ":") + 1, string.len(suggestion))
@@ -236,7 +238,7 @@ local function parse_response(response, partNumberString, bufnr)
             -- Get the icon to display one line further down
             -- sign_priority = 100,
         })
-        ::continue::
+        -- ::continue::
     end
 end
 
@@ -324,7 +326,8 @@ vim.api.nvim_create_user_command("Backseat", function()
         -- end
 
         if get_additional_instruction() ~= "" then
-            text = text .. "\n<system>When responding with line=, " .. get_additional_instruction() .. "</system>"
+            -- text = text .. "\nWhen responding with line=, " .. get_additional_instruction()
+            text = text .. "\n" .. get_additional_instruction()
         end
 
         -- Make a copy of requestTable (value not reference)
