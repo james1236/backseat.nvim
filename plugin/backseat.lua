@@ -219,6 +219,10 @@ local function parse_response(response, partNumberString, bufnr)
         end
         -- Get the message
         local message = string.sub(suggestion, string.find(suggestion, ":") + 1, string.len(suggestion))
+        -- If the first character is a space, remove it
+        if string.sub(message, 1, 1) == " " then
+            message = string.sub(message, 2, string.len(message))
+        end
         -- print("Line " .. lineNum .. ": " .. message)
 
         -- Split suggestion into line, highlight group pairs
@@ -238,9 +242,7 @@ local function parse_response(response, partNumberString, bufnr)
             virt_lines = pairs,
             hl_mode = "combine",
             sign_text = get_highlight_icon(),
-            sign_hl_group = get_highlight_group(),
-            -- Get the icon to display one line further down
-            -- sign_priority = 100,
+            sign_hl_group = get_highlight_group()
         })
         -- ::continue::
     end
